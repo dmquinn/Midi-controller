@@ -43,23 +43,23 @@ const container = document.getElementById("container");
 const colors = ["#1d1d1d", "#1d1d1d", "#1d1d1d", "#e65050", "#e63030"];
 const SQUARES = 300;
 
-const reverb = new Tone.Reverb(10, 8).toDestination();
+const reverb = new Tone.Reverb().toDestination();
 const filter = new Tone.Filter().connect(reverb);
-const delay = new Tone.PingPongDelay().toDestination;
+// const delay = new Tone.PingPongDelay().connect(reverb).toDestination();
 var synth = new Tone.PolySynth(Tone.Synth, {
 	oscillator: {
-		type: "fatsawtooth",
-		count: 3,
-		spread: 30,
+		type: "fatsquare",
+		count: 9,
+		spread: 20,
 	},
 	envelope: {
-		attack: 0.01,
+		attack: 10,
 		decay: 0.1,
 		sustain: 0.5,
-		release: 0.4,
+		release: 0.9,
 		attackCurve: "exponential",
 	},
-}).connect(delay);
+}).connect(reverb);
 
 const squaresound = [];
 var midi, data;
@@ -105,7 +105,7 @@ function playNote(messageData) {
 	console.log(messageData.data[1]);
 	i = messageData.data[1];
 
-	synth.triggerAttackRelease(Object.values([notes[i]]), 0.1);
+	synth.triggerAttackRelease(Object.values([notes[i]]), 1);
 
 	// squaresound;
 
@@ -131,13 +131,13 @@ function getRandomColor() {
 }
 
 function onDeviceInput({ input, value }) {
-	if (input === 82) inst.changeSynth(value);
+	if (input === 82) changeSynth();
 	else if (input === 2) inst.handleVolume(value);
 	else if (input === 14) inst.handleFilter(value);
 	else console.log("onDeviceInput!", input, value);
 }
 
 function changeSynth() {
-	synth.oscillator.type = "Sine";
+	synth.oscillator.type = "sine";
 	console.log("changed");
 }

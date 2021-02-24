@@ -17,14 +17,14 @@ body {
 	align-items: center;
 	justify-content: center;
 	flex-wrap: wrap;
-	max-width: 400px;
+	max-width: 100vw;
 }
 
 .square {
 	background-color: #1d1d1d;
 	box-shadow: 0 0 2px #000;
-	height: 46px;
-	width: 46px;
+	height: 76px;
+	width: 76px;
 	margin: 2px;
 	transition: 0.5s ease;
 }
