@@ -1,4 +1,6 @@
 console.clear();
+let countOsc = 0;
+let oscTypes = ["sine", "square", "sawtooth", "triangle"];
 var notes = {
 	0: "C3",
 	1: "C#3",
@@ -39,28 +41,25 @@ var notes = {
 	57: "E2",
 	58: "F2",
 };
+
+let synthText = (document.querySelector(".synthType").innerHTML = oscTypes[
+	countOsc
+].toString());
+
 const container = document.getElementById("container");
 const colors = ["#1d1d1d", "#1d1d1d", "#1d1d1d", "#e65050", "#e63030"];
-const SQUARES = 300;
+const SQUARES = 64;
 
-const reverb = new Tone.Reverb().toDestination();
-const filter = new Tone.Filter().connect(reverb);
-// const delay = new Tone.PingPongDelay().connect(reverb).toDestination();
-var synth = new Tone.PolySynth(Tone.Synth, {
-	oscillator: {
-		type: "fatsquare",
-		count: 9,
-		spread: 20,
-	},
+const filter = new Tone.Filter().toDestination();
+filter.frequency.value = 200;
+console.log(filter);
+let synth = new Tone.PolySynth().connect(filter);
+synth.set({
+	oscillator: { type: oscTypes[countOsc] },
 	envelope: {
-		attack: 10,
-		decay: 0.1,
-		sustain: 0.5,
-		release: 0.9,
-		attackCurve: "exponential",
+		attack: 0.005,
 	},
-}).connect(reverb);
-
+});
 const squaresound = [];
 var midi, data;
 if (navigator.requestMIDIAccess) {
@@ -76,7 +75,7 @@ if (navigator.requestMIDIAccess) {
 function onMIDISuccess(midiData) {
 	midi = midiData;
 	var allInputs = midi.inputs.values();
-	console.log(midi.outputs);
+	console.log(midiData);
 
 	for (
 		var input = allInputs.next();
@@ -84,7 +83,7 @@ function onMIDISuccess(midiData) {
 		input = allInputs.next()
 	) {
 		if (!input) {
-			removeColor;
+			removeColor(square);
 		}
 		input.value.onmidimessage = playNote;
 	}
@@ -99,19 +98,30 @@ for (let i = 0; i < SQUARES; i++) {
 	square.classList.add("square");
 	container.appendChild(square);
 	squaresound.push(square);
-	console.log("squaresound", squaresound);
 }
 function playNote(messageData) {
-	console.log(messageData.data[1]);
+	console.log("here", messageData.data);
 	i = messageData.data[1];
+	if (messageData.data[0] === 128) {
+		return removeColor;
+	}
+	if (messageData.data[0] === 144) {
+		synth.triggerAttackRelease(Object.values([notes[i]]), 0.2);
 
-	synth.triggerAttackRelease(Object.values([notes[i]]), 1);
-
-	// squaresound;
-
-	console.log("ok", i);
-	for (i = 0; i < squaresound.length; i++) {
-		setColor(squaresound[i]);
+		if (i === 82) {
+			changeSynth();
+			if (countOsc <= 2) {
+				countOsc++;
+			} else {
+				countOsc = 0;
+			}
+			console.log("countOsc", countOsc);
+		}
+		console.log("ok", i);
+		for (i = 0; i < squaresound.length; i++) {
+			setColor(squaresound[i]);
+		}
+		// countOsc++;
 	}
 }
 
@@ -130,14 +140,9 @@ function getRandomColor() {
 	return colors[Math.floor(Math.random() * colors.length)];
 }
 
-function onDeviceInput({ input, value }) {
-	if (input === 82) changeSynth();
-	else if (input === 2) inst.handleVolume(value);
-	else if (input === 14) inst.handleFilter(value);
-	else console.log("onDeviceInput!", input, value);
-}
-
 function changeSynth() {
-	synth.oscillator.type = "sine";
-	console.log("changed");
+	synth.set({ oscillator: { type: oscTypes[countOsc] } });
+	synthText.innerHTML = oscTypes[countOsc].toString();
+
+	console.log("changed", synth, synthText);
 }
