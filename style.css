@@ -33,3 +33,9 @@ body {
 body {
 	color: #cc47c1;
 }
+ul {
+	position: absolute;
+	right: 20px;
+	top: 20px;
+	font-size: 30px;
+}

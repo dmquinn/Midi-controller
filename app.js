@@ -1,6 +1,8 @@
 console.clear();
 let countOsc = 0;
+let countPrefs = 0;
 let oscTypes = ["sine", "square", "sawtooth", "triangle"];
+let prefixes = ["fm", "am", "fat"];
 var notes = {
 	0: "C3",
 	1: "C#3",
@@ -41,23 +43,37 @@ var notes = {
 	57: "E2",
 	58: "F2",
 };
+const filter = new Tone.Filter().toDestination();
+filter.frequency.value = 500;
 
-let synthText = (document.querySelector(".synthType").innerHTML = oscTypes[
-	countOsc
-].toString());
+const dist = new Tone.Distortion(0.0).toDestination();
+console.log(dist.distortion);
+
+let mode;
+mode = "arpeggio";
+console.log("mode", mode);
+let releaseVal = 0.1;
+let attackVal = 0.1;
+
+let synthText = document.querySelector(".synthType");
+synthText.innerHTML = oscTypes[countOsc].toString();
+let prefixText = document.querySelector(".prefixType");
+prefixText.innerHTML = prefixes[countPrefs].toString();
+let filterText = document.querySelector(".filterText");
+filterText.innerHTML = filter.frequency.value;
+let distText = document.querySelector(".distText");
+distText.innerHTML = dist.distortion;
 
 const container = document.getElementById("container");
-const colors = ["#1d1d1d", "#1d1d1d", "#1d1d1d", "#e65050", "#e63030"];
+const sineColors = ["#1d1d1d", "#1d1d1d", "#1d1d1d", "#e65050", "#e63030"];
 const SQUARES = 64;
 
-const filter = new Tone.Filter().toDestination();
-filter.frequency.value = 200;
-console.log(filter);
-let synth = new Tone.PolySynth().connect(filter);
+let synth = new Tone.PolySynth().connect(dist);
 synth.set({
-	oscillator: { type: oscTypes[countOsc] },
+	oscillator: { type: prefixes[countPrefs] + oscTypes[countOsc] },
 	envelope: {
 		attack: 0.005,
+		release: releaseVal,
 	},
 });
 const squaresound = [];
@@ -75,7 +91,6 @@ if (navigator.requestMIDIAccess) {
 function onMIDISuccess(midiData) {
 	midi = midiData;
 	var allInputs = midi.inputs.values();
-	console.log(midiData);
 
 	for (
 		var input = allInputs.next();
@@ -100,13 +115,14 @@ for (let i = 0; i < SQUARES; i++) {
 	squaresound.push(square);
 }
 function playNote(messageData) {
-	console.log("here", messageData.data);
 	i = messageData.data[1];
 	if (messageData.data[0] === 128) {
 		return removeColor;
 	}
 	if (messageData.data[0] === 144) {
 		synth.triggerAttackRelease(Object.values([notes[i]]), 0.2);
+
+		/////////////////////////////////////////////////////////////
 
 		if (i === 82) {
 			changeSynth();
@@ -115,13 +131,43 @@ function playNote(messageData) {
 			} else {
 				countOsc = 0;
 			}
-			console.log("countOsc", countOsc);
+		}
+		if (i === 83) {
+			changePrefix();
+			if (countPrefs <= 1) {
+				countPrefs++;
+			} else {
+				countPrefs = 0;
+			}
+		}
+		if (i === 64) {
+			filterUp();
+		}
+		if (i === 65) {
+			filterDown();
+		}
+		if (i === 66) {
+			distUp();
+		}
+		if (i === 67) {
+			distDown();
+		}
+		if (i === 84) {
+			releaseUp();
+		}
+		if (i === 85) {
+			releaseDown();
+		}
+		if (i === 86) {
+			attackUp();
+		}
+		if (i === 87) {
+			attackDown();
 		}
 		console.log("ok", i);
 		for (i = 0; i < squaresound.length; i++) {
 			setColor(squaresound[i]);
 		}
-		// countOsc++;
 	}
 }
 
@@ -137,12 +183,62 @@ function removeColor(element) {
 }
 
 function getRandomColor() {
-	return colors[Math.floor(Math.random() * colors.length)];
+	return sineColors[Math.floor(Math.random() * sineColors.length)];
 }
 
 function changeSynth() {
-	synth.set({ oscillator: { type: oscTypes[countOsc] } });
+	synth.set({
+		oscillator: { type: prefixes[countPrefs] + oscTypes[countOsc] },
+	});
 	synthText.innerHTML = oscTypes[countOsc].toString();
 
-	console.log("changed", synth, synthText);
+	console.log("changed", synth, oscTypes[countOsc]);
+}
+function changePrefix() {
+	synth.set({
+		oscillator: { type: prefixes[countPrefs] + oscTypes[countOsc] },
+	});
+	prefixText.innerHTML = prefixes[countPrefs].toString();
+
+	console.log("changed2", prefixes[countPrefs]);
+}
+function filterUp() {
+	filter.frequency.value = filter.frequency.value + 100;
+	filterText.innerHTML = filter.frequency.value;
+}
+function filterDown() {
+	filter.frequency.value = filter.frequency.value - 100;
+	filterText.innerHTML = filter.frequency.value;
+}
+function distUp() {
+	dist.distortion = dist.distortion + 0.05;
+	distText.innerHTML = dist.distortion;
+}
+function distDown() {
+	dist.distortion = dist.distortion - 0.05;
+	distText.innerHTML = dist.distortion;
+}
+function releaseUp() {
+	synth.set({
+		envelope: { release: releaseVal++ },
+	});
+	console.log(synth.options.envelope.release);
+}
+function releaseDown() {
+	synth.set({
+		envelope: { release: releaseVal-- },
+	});
+	console.log(synth.options.envelope.release);
+}
+function attackUp() {
+	synth.set({
+		envelope: { attack: attackVal++ },
+	});
+	console.log(synth.options.envelope.attack);
+}
+function attackDown() {
+	synth.set({
+		envelope: { attack: attackVal-- },
+	});
+	console.log(synth.options.envelope.attack);
 }
