@@ -1,47 +1,61 @@
 console.clear();
 let countOsc = 0;
 let countPrefs = 0;
+let j = 0;
+let sequence = [];
 let oscTypes = ["sine", "square", "sawtooth", "triangle"];
 let prefixes = ["fm", "am", "fat"];
 var notes = {
-	0: "C3",
-	1: "C#3",
-	2: "D3",
-	3: "D#3",
-	4: "E3",
-	5: "F3",
-	6: "F#3",
-	7: "G3",
-	8: "G#3",
-	9: "A3",
-	10: "A#3",
-	11: "B3",
-	12: "C4",
-	13: "C4",
-	14: "C#4",
-	15: "D4",
-	16: "D#4",
-	17: "E4",
-	18: "F4",
-	19: "F#4",
-	20: "G4",
-	21: "G#4",
-	24: "A4",
-	23: "A#4",
-	24: "B4",
-	25: "C5",
-	26: "C#5",
-	27: "D5",
-	28: "D#5",
-	29: "E5",
-	30: "F5",
-	31: "F#5",
-	32: "G5",
-	33: "G#5",
-	34: "A5",
-	56: "C1",
-	57: "E2",
-	58: "F2",
+	0: "C2",
+	1: "D#2",
+	2: "F2",
+	3: "F#2",
+	4: "G2",
+	5: "C#3",
+	6: "F#2",
+	7: "G2",
+	8: "G#2",
+	9: "A2",
+	10: "A#2",
+	11: "B2",
+	12: "C3",
+	13: "C#3",
+	14: "D3",
+	15: "D#3",
+	16: "E3",
+	17: "F3",
+	18: "F#3",
+	19: "G3",
+	20: "G#3",
+	21: "A3",
+	22: "A#3",
+	23: "B3",
+	24: "C4",
+	25: "C4",
+	26: "C#4",
+	27: "D4",
+	28: "D#4",
+	29: "E4",
+	30: "F4",
+	31: "F#4",
+	32: "G4",
+	33: "G#4",
+	34: "A4",
+	35: "A#4",
+	36: "B4",
+	37: "C5",
+	38: "C#5",
+	39: "D5",
+	40: "D#5",
+	41: "E5",
+	42: "F5",
+	43: "F#5",
+	44: "G5",
+	45: "G#5",
+	46: "A5",
+	47: "C1",
+	48: "E2",
+	49: "F2",
 };
 const filter = new Tone.Filter().toDestination();
 filter.frequency.value = 500;
@@ -49,9 +63,6 @@ filter.frequency.value = 500;
 const dist = new Tone.Distortion(0.0).toDestination();
 console.log(dist.distortion);
 
-let mode;
-mode = "arpeggio";
-console.log("mode", mode);
 let releaseVal = 0.1;
 let attackVal = 0.1;
 
@@ -91,6 +102,7 @@ if (navigator.requestMIDIAccess) {
 function onMIDISuccess(midiData) {
 	midi = midiData;
 	var allInputs = midi.inputs.values();
+	console.log(input);
 
 	for (
 		var input = allInputs.next();
@@ -121,8 +133,11 @@ function playNote(messageData) {
 	}
 	if (messageData.data[0] === 144) {
 		synth.triggerAttackRelease(Object.values([notes[i]]), 0.2);
+		const text = i.toString();
+		console.log("text", text);
+		focused[j].value = text;
 
-		/////////////////////////////////////////////////////////////
+		console.log("140", focused[j].value);
 
 		if (i === 82) {
 			changeSynth();
@@ -164,8 +179,14 @@ function playNote(messageData) {
 		if (i === 87) {
 			attackDown();
 		}
-		console.log("ok", i);
+		if (i === 98) {
+			focusMethod();
+		}
+
 		for (i = 0; i < squaresound.length; i++) {
+			setColor(squaresound[i]);
+		}
+		for (i = 0; i < sequence.length; i++) {
 			setColor(squaresound[i]);
 		}
 	}
@@ -241,4 +262,21 @@ function attackDown() {
 		envelope: { attack: attackVal-- },
 	});
 	console.log(synth.options.envelope.attack);
+}
+
+let focused = document.querySelectorAll("input[type=text]");
+
+function focusMethod() {
+	console.log("j", i);
+	if (j < focused.length) {
+		focused[j].focus();
+		focused[j].classList.add("litUp");
+		sequence.push(i);
+
+		j++;
+
+		if (j > 7) {
+			j = 0;
+		}
+	}
 }
